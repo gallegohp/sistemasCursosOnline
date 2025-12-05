@@ -13,12 +13,14 @@ public class EstudianteRepository {
 
     public boolean emailExiste(String email) {
         String sql = "SELECT 1 FROM estudiante WHERE email_estudiante = ? LIMIT 1";
+        //la consulta verifica si existe un estudiante con el email dado
+        //limita el resultado a 1 fila para eficiencia y limit1 evita multiples resultados
         try (Connection connection = Conexion.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+            preparedStatement.setString(1, email);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -27,25 +29,24 @@ public class EstudianteRepository {
     }
 
     public int crearEstudiante(Estudiante estudiante, List<Integer> cursosIds) {
-        String sqlEst = "INSERT INTO estudiante (nombre_estudiante, email_estudiante) VALUES (?, ?)";
-        String sqlInsCurso = "INSERT INTO curso_estudiante (id_curso, id_estudiante) VALUES (?, ?)";
+        String sqlEst = "INSERT INTO estudiante (nombre_estudiante, email_estudiante) VALUES (?, ?)"; // para insertar estudiante
+        String sqlInsCurso = "INSERT INTO curso_estudiante (id_curso, id_estudiante) VALUES (?, ?)"; // para asociar cursos
         int generatedId = -1;
 
         try (Connection connection = Conexion.getConnection()) {
             connection.setAutoCommit(false);
 
             // insertar estudiante
-            try (PreparedStatement ps = connection.prepareStatement(sqlEst, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setString(1, estudiante.getNombre());
-                ps.setString(2, estudiante.getEmail());
-                int affected = ps.executeUpdate();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sqlEst, Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setString(1, estudiante.getNombre());
+                preparedStatement.setString(2, estudiante.getEmail());
+                int affected = preparedStatement.executeUpdate();
                 if (affected == 0) throw new SQLException("Crear estudiante falló, no se insertaron filas.");
-                try (ResultSet gk = ps.getGeneratedKeys()) {
-                    if (gk.next()) generatedId = gk.getInt(1);
+                try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) generatedId = generatedKeys.getInt(1);
                     else throw new SQLException("No se obtuvo ID generado.");
                 }
             }
-
             // validar y asociar cursos
             if (cursosIds != null) {
                 for (Integer cid : cursosIds) {
