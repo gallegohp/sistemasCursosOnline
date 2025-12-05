@@ -41,10 +41,11 @@ public class EstudianteRepository {
                 preparedStatement.setString(1, estudiante.getNombre());
                 preparedStatement.setString(2, estudiante.getEmail());
                 int affected = preparedStatement.executeUpdate();
-                if (affected == 0) throw new SQLException("Crear estudiante falló, no se insertaron filas.");
+                //comprobar insercion y comparacion de filas afectadas
+                if (affected == 0) throw new SQLException("Crear estudiante falló, no se insertaron filas."); // Error si no se insertó
                 try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) generatedId = generatedKeys.getInt(1);
-                    else throw new SQLException("No se obtuvo ID generado.");
+                    if (generatedKeys.next()) generatedId = generatedKeys.getInt(1);// insercion de id generado a la tabla puente
+                    else throw new SQLException("No se obtuvo ID generado."); // Error si no se obtuvo ID
                 }
             }
             // validar y asociar cursos
